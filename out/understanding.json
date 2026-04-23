@@ -1,0 +1,486 @@
+[
+  {
+    "clause_id": "1.01.p1",
+    "clause_type": "pricing_terms",
+    "primary_intent": "pricing_terms.price_cap",
+    "extracted_fields": {
+      "pricing_model": "per_share",
+      "discount_terms": null,
+      "cap_usd": null,
+      "trading_days_window": null,
+      "material_dates_iso": [
+        "2022-08-11"
+      ]
+    },
+    "entities": {
+      "parties": {
+        "company": "will have the right to sell to B",
+        "counterparty": "is under no obligation to sell any securities to B"
+      },
+      "instruments": [
+        "Common Stock Purchase Agreement (B. Riley Principal Capital II)",
+        "Common Stock Purchase Agreement (B. Riley Principal Capital II)",
+        "Registration Rights Agreement"
+      ]
+    },
+    "confidence": 0.76,
+    "semantic_block_id": "1.01.sb1",
+    "debug": {
+      "why_classified_as_noise": null,
+      "merged_with": [],
+      "deduped_from": [],
+      "block_assignment_reason": "adjacent_run:section=1.01;clause_type=pricing_terms;block=1.01.sb1"
+    }
+  },
+  {
+    "clause_id": "1.01.p2",
+    "clause_type": "misc.noise",
+    "primary_intent": "unclassified",
+    "extracted_fields": {
+      "signal_codes": [
+        "low_character_count"
+      ]
+    },
+    "entities": {
+      "parties": null,
+      "instruments": null
+    },
+    "confidence": 0.05,
+    "semantic_block_id": "1.01.sb2",
+    "debug": {
+      "why_classified_as_noise": "no_classifier_match_low_information",
+      "merged_with": [],
+      "deduped_from": [],
+      "block_assignment_reason": "adjacent_run:section=1.01;clause_type=misc.noise;block=1.01.sb2"
+    }
+  },
+  {
+    "clause_id": "1.01.p3",
+    "clause_type": "obligations",
+    "primary_intent": "obligations.general",
+    "extracted_fields": {},
+    "entities": {
+      "parties": {
+        "company": "agreed to file with the Securities and Exchange Commission (the “SEC”) pursuant to the Registration Rights Agreement",
+        "counterparty": "will have the right"
+      },
+      "instruments": [
+        "Common Stock Purchase Agreement (B. Riley Principal Capital II)",
+        "Registration Rights Agreement"
+      ]
+    },
+    "confidence": 0.45,
+    "semantic_block_id": "1.01.sb3",
+    "debug": {
+      "why_classified_as_noise": null,
+      "merged_with": [],
+      "deduped_from": [],
+      "block_assignment_reason": "adjacent_run:section=1.01;clause_type=obligations;block=1.01.sb3"
+    }
+  },
+  {
+    "clause_id": "1.01.p4",
+    "clause_type": "pricing_terms",
+    "primary_intent": "pricing_terms.vwap_discount",
+    "extracted_fields": {
+      "pricing_model": "volume_weighted_average_price",
+      "discount_terms": [
+        {
+          "mechanism": "discount",
+          "value_percent": 3,
+          "applies_to": "volume_weighted_average_price",
+          "condition": "regular_trading_session"
+        }
+      ],
+      "cap_usd": null,
+      "trading_days_window": null,
+      "material_dates_iso": null
+    },
+    "entities": {
+      "parties": {
+        "company": "pursuant to the Purchase Agreement",
+        "counterparty": null
+      },
+      "instruments": [
+        "Common Stock Purchase Agreement (B. Riley Principal Capital II)"
+      ]
+    },
+    "confidence": 0.71,
+    "semantic_block_id": "1.01.sb4",
+    "debug": {
+      "why_classified_as_noise": null,
+      "merged_with": [],
+      "deduped_from": [],
+      "block_assignment_reason": "adjacent_run:section=1.01;clause_type=pricing_terms;block=1.01.sb4"
+    }
+  },
+  {
+    "clause_id": "1.01.p5",
+    "clause_type": "payment",
+    "primary_intent": "payment.general",
+    "extracted_fields": {
+      "amounts_usd": null,
+      "timing_code": "unspecified",
+      "within_days": null,
+      "frequency_code": null,
+      "calculation_basis": null,
+      "wire_instructions": null,
+      "material_dates_iso": null
+    },
+    "entities": {
+      "parties": {
+        "company": "will control the timing and amount of any sales of Common Stock to B",
+        "counterparty": "from time to time"
+      },
+      "instruments": [
+        "Common Stock Purchase Agreement (B. Riley Principal Capital II)"
+      ]
+    },
+    "confidence": 0.66,
+    "semantic_block_id": "1.01.sb5",
+    "debug": {
+      "why_classified_as_noise": null,
+      "merged_with": [],
+      "deduped_from": [],
+      "block_assignment_reason": "adjacent_run:section=1.01;clause_type=payment;block=1.01.sb5"
+    }
+  },
+  {
+    "clause_id": "1.01.p6",
+    "clause_type": "misc.noise",
+    "primary_intent": "unclassified",
+    "extracted_fields": {},
+    "entities": {
+      "parties": null,
+      "instruments": null
+    },
+    "confidence": 0.03,
+    "semantic_block_id": "1.01.sb6",
+    "debug": {
+      "why_classified_as_noise": "no_substantive_clause_type_inferred",
+      "merged_with": [],
+      "deduped_from": [],
+      "block_assignment_reason": "adjacent_run:section=1.01;clause_type=misc.noise;block=1.01.sb6"
+    }
+  },
+  {
+    "clause_id": "1.01.p7",
+    "clause_type": "pricing_terms",
+    "primary_intent": "pricing_terms.general",
+    "extracted_fields": {
+      "pricing_model": "volume_weighted_average_price"
+    },
+    "entities": {
+      "parties": null,
+      "instruments": [
+        "Common Stock Purchase Agreement (B. Riley Principal Capital II)"
+      ]
+    },
+    "confidence": 0.58,
+    "semantic_block_id": "1.01.sb7",
+    "debug": {
+      "why_classified_as_noise": null,
+      "merged_with": [],
+      "deduped_from": [],
+      "block_assignment_reason": "adjacent_run:section=1.01;clause_type=pricing_terms;block=1.01.sb7"
+    }
+  },
+  {
+    "clause_id": "1.01.p8",
+    "clause_type": "misc.noise",
+    "primary_intent": "unclassified",
+    "extracted_fields": {},
+    "entities": {
+      "parties": null,
+      "instruments": null
+    },
+    "confidence": 0,
+    "semantic_block_id": "1.01.sb8",
+    "debug": {
+      "why_classified_as_noise": "no_substantive_clause_type_inferred",
+      "merged_with": [],
+      "deduped_from": [],
+      "block_assignment_reason": "adjacent_run:section=1.01;clause_type=misc.noise;block=1.01.sb8"
+    }
+  },
+  {
+    "clause_id": "1.01.p9",
+    "clause_type": "misc.noise",
+    "primary_intent": "unclassified",
+    "extracted_fields": {},
+    "entities": {
+      "parties": null,
+      "instruments": null
+    },
+    "confidence": 0.03,
+    "semantic_block_id": "1.01.sb8",
+    "debug": {
+      "why_classified_as_noise": "no_substantive_clause_type_inferred",
+      "merged_with": [],
+      "deduped_from": [],
+      "block_assignment_reason": "adjacent_run:section=1.01;clause_type=misc.noise;block=1.01.sb8"
+    }
+  },
+  {
+    "clause_id": "1.01.p10",
+    "clause_type": "misc.noise",
+    "primary_intent": "unclassified",
+    "extracted_fields": {},
+    "entities": {
+      "parties": null,
+      "instruments": null
+    },
+    "confidence": 0,
+    "semantic_block_id": "1.01.sb8",
+    "debug": {
+      "why_classified_as_noise": "no_substantive_clause_type_inferred",
+      "merged_with": [],
+      "deduped_from": [],
+      "block_assignment_reason": "adjacent_run:section=1.01;clause_type=misc.noise;block=1.01.sb8"
+    }
+  },
+  {
+    "clause_id": "1.01.p11",
+    "clause_type": "misc.noise",
+    "primary_intent": "unclassified",
+    "extracted_fields": {},
+    "entities": {
+      "parties": null,
+      "instruments": null
+    },
+    "confidence": 0.03,
+    "semantic_block_id": "1.01.sb8",
+    "debug": {
+      "why_classified_as_noise": "no_substantive_clause_type_inferred",
+      "merged_with": [],
+      "deduped_from": [],
+      "block_assignment_reason": "adjacent_run:section=1.01;clause_type=misc.noise;block=1.01.sb8"
+    }
+  },
+  {
+    "clause_id": "1.01.p12",
+    "clause_type": "misc.noise",
+    "primary_intent": "unclassified",
+    "extracted_fields": {},
+    "entities": {
+      "parties": null,
+      "instruments": null
+    },
+    "confidence": 0.03,
+    "semantic_block_id": "1.01.sb8",
+    "debug": {
+      "why_classified_as_noise": "no_substantive_clause_type_inferred",
+      "merged_with": [],
+      "deduped_from": [],
+      "block_assignment_reason": "adjacent_run:section=1.01;clause_type=misc.noise;block=1.01.sb8"
+    }
+  },
+  {
+    "clause_id": "1.01.p13",
+    "clause_type": "indemnity",
+    "primary_intent": "indemnity.general",
+    "extracted_fields": {
+      "indemnity_scope_code": "general",
+      "survival_months": null,
+      "survival_years": null,
+      "basket_threshold_usd": null,
+      "indemnitor_role_codes": null
+    },
+    "entities": {
+      "parties": null,
+      "instruments": [
+        "Common Stock Purchase Agreement (B. Riley Principal Capital II)",
+        "Registration Rights Agreement"
+      ]
+    },
+    "confidence": 0.63,
+    "semantic_block_id": "1.01.sb9",
+    "debug": {
+      "why_classified_as_noise": null,
+      "merged_with": [],
+      "deduped_from": [],
+      "block_assignment_reason": "adjacent_run:section=1.01;clause_type=indemnity;block=1.01.sb9"
+    }
+  },
+  {
+    "clause_id": "1.01.p14",
+    "clause_type": "termination",
+    "primary_intent": "termination.general",
+    "extracted_fields": {},
+    "entities": {
+      "parties": null,
+      "instruments": [
+        "Common Stock Purchase Agreement (B. Riley Principal Capital II)"
+      ]
+    },
+    "confidence": 0.53,
+    "semantic_block_id": "1.01.sb10",
+    "debug": {
+      "why_classified_as_noise": null,
+      "merged_with": [],
+      "deduped_from": [],
+      "block_assignment_reason": "adjacent_run:section=1.01;clause_type=termination;block=1.01.sb10"
+    }
+  },
+  {
+    "clause_id": "1.01.p15",
+    "clause_type": "misc.noise",
+    "primary_intent": "unclassified",
+    "extracted_fields": {},
+    "entities": {
+      "parties": null,
+      "instruments": null
+    },
+    "confidence": 0.03,
+    "semantic_block_id": "1.01.sb11",
+    "debug": {
+      "why_classified_as_noise": "no_substantive_clause_type_inferred",
+      "merged_with": [],
+      "deduped_from": [],
+      "block_assignment_reason": "adjacent_run:section=1.01;clause_type=misc.noise;block=1.01.sb11"
+    }
+  },
+  {
+    "clause_id": "1.01.p16",
+    "clause_type": "termination",
+    "primary_intent": "termination.general",
+    "extracted_fields": {
+      "notice_period_days": null,
+      "termination_trigger_codes": null,
+      "mutual_termination_allowed": true,
+      "termination_for_convenience": null,
+      "termination_for_cause": null,
+      "references_automatic_termination": null,
+      "material_dates_iso": null
+    },
+    "entities": {
+      "parties": {
+        "company": "has the right to terminate the Purchase Agreement at any time after Commencement upon ten business days’ prior written no",
+        "counterparty": "upon the occurrence of certain events set forth in the Purchase Agreement"
+      },
+      "instruments": [
+        "Common Stock Purchase Agreement (B. Riley Principal Capital II)",
+        "Registration Rights Agreement"
+      ]
+    },
+    "confidence": 0.6,
+    "semantic_block_id": "1.01.sb12",
+    "debug": {
+      "why_classified_as_noise": null,
+      "merged_with": [],
+      "deduped_from": [],
+      "block_assignment_reason": "adjacent_run:section=1.01;clause_type=termination;block=1.01.sb12"
+    }
+  },
+  {
+    "clause_id": "1.01.p17",
+    "clause_type": "obligations",
+    "primary_intent": "obligations.general",
+    "extracted_fields": {},
+    "entities": {
+      "parties": {
+        "company": "issued 355",
+        "counterparty": null
+      },
+      "instruments": [
+        "Common Stock Purchase Agreement (B. Riley Principal Capital II)",
+        "Registration Rights Agreement"
+      ]
+    },
+    "confidence": 0.39,
+    "semantic_block_id": "1.01.sb13",
+    "debug": {
+      "why_classified_as_noise": null,
+      "merged_with": [],
+      "deduped_from": [],
+      "block_assignment_reason": "adjacent_run:section=1.01;clause_type=obligations;block=1.01.sb13"
+    }
+  },
+  {
+    "clause_id": "1.01.p18",
+    "clause_type": "misc.noise",
+    "primary_intent": "unclassified",
+    "extracted_fields": {},
+    "entities": {
+      "parties": null,
+      "instruments": null
+    },
+    "confidence": 0.12,
+    "semantic_block_id": "1.01.sb14",
+    "debug": {
+      "why_classified_as_noise": "no_substantive_clause_type_inferred",
+      "merged_with": [],
+      "deduped_from": [],
+      "block_assignment_reason": "adjacent_run:section=1.01;clause_type=misc.noise;block=1.01.sb14"
+    }
+  },
+  {
+    "clause_id": "3.02.p1",
+    "clause_type": "obligations",
+    "primary_intent": "obligations.general",
+    "extracted_fields": {},
+    "entities": {
+      "parties": {
+        "company": "to B",
+        "counterparty": null
+      },
+      "instruments": [
+        "Common Stock Purchase Agreement (B. Riley Principal Capital II)"
+      ]
+    },
+    "confidence": 0.33,
+    "semantic_block_id": "3.02.sb1",
+    "debug": {
+      "why_classified_as_noise": null,
+      "merged_with": [],
+      "deduped_from": [],
+      "block_assignment_reason": "adjacent_run:section=3.02;clause_type=obligations;block=3.02.sb1"
+    }
+  },
+  {
+    "clause_id": "9.01.p1",
+    "clause_type": "obligations",
+    "primary_intent": "obligations.general",
+    "extracted_fields": {
+      "performance_due_iso": "2022-08-11"
+    },
+    "entities": {
+      "parties": {
+        "company": "and B",
+        "counterparty": "the Company"
+      },
+      "instruments": [
+        "Common Stock Purchase Agreement (B. Riley Principal Capital II)",
+        "Registration Rights Agreement"
+      ]
+    },
+    "confidence": 0.45,
+    "semantic_block_id": "9.01.sb1",
+    "debug": {
+      "why_classified_as_noise": null,
+      "merged_with": [],
+      "deduped_from": [],
+      "block_assignment_reason": "adjacent_run:section=9.01;clause_type=obligations;block=9.01.sb1"
+    }
+  },
+  {
+    "clause_id": "signature.p1",
+    "clause_type": "obligations",
+    "primary_intent": "obligations.general",
+    "extracted_fields": {
+      "performance_due_iso": "2022-08-12"
+    },
+    "entities": {
+      "parties": null,
+      "instruments": null
+    },
+    "confidence": 0.3,
+    "semantic_block_id": "signature.sb1",
+    "debug": {
+      "why_classified_as_noise": null,
+      "merged_with": [],
+      "deduped_from": [],
+      "block_assignment_reason": "adjacent_run:section=signature;clause_type=obligations;block=signature.sb1"
+    }
+  }
+]

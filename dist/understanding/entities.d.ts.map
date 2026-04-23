@@ -1,0 +1,1 @@
+{"version":3,"file":"entities.d.ts","sourceRoot":"","sources":["../../src/understanding/entities.ts"],"names":[],"mappings":"AAAA;;GAEG;AAKH,8EAA8E;AAC9E,wBAAgB,eAAe,CAAC,IAAI,EAAE,MAAM,GAAG;IAC7C,OAAO,EAAE,MAAM,EAAE,GAAG,IAAI,CAAC;IACzB,WAAW,EAAE,MAAM,EAAE,GAAG,IAAI,CAAC;CAC9B,CA4CA"}

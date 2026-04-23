@@ -1,0 +1,1 @@
+{"version":3,"file":"extract.d.ts","sourceRoot":"","sources":["../../src/clause/extract.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,MAAM,EAAE,MAAM,aAAa,CAAC;AAK1C;;GAEG;AACH,MAAM,MAAM,WAAW,GAAG;IACxB,EAAE,EAAE,MAAM,CAAC;IACX,KAAK,EAAE,MAAM,CAAC;IACd,sFAAsF;IACtF,KAAK,EAAE,MAAM,CAAC;CACf,CAAC;AA6FF;;;GAGG;AACH,wBAAgB,cAAc,CAAC,IAAI,EAAE,MAAM,GAAG,MAAM,EAAE,CAkBrD"}

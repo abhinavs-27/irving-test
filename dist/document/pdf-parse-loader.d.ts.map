@@ -1,0 +1,1 @@
+{"version":3,"file":"pdf-parse-loader.d.ts","sourceRoot":"","sources":["../../src/document/pdf-parse-loader.ts"],"names":[],"mappings":"AAIA,OAAO,KAAK,EAAE,kBAAkB,EAAE,MAAM,sBAAsB,CAAC;AAS/D,MAAM,MAAM,qBAAqB,GAAG;IAClC,sDAAsD;IACtD,qBAAqB,CAAC,EAAE,MAAM,CAAC;CAChC,CAAC;AAkIF;;GAEG;AACH,wBAAgB,oBAAoB,CAClC,OAAO,GAAE,qBAA0B,GAClC,kBAAkB,CA0BpB"}
