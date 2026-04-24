@@ -36,5 +36,10 @@ export { normalizeParagraphNodesAndGroupBlocks } from './pipeline/enrich-segment
 export { printClauseTree } from './clause/print.js';
 export { normalizeClauseId, computeParentId, isWellFormedClauseId, isProbableClauseNumbering, isStructuralClauseId, CLAUSE_ID_PATTERN, } from './clause/clause-id.js';
 export { legalDocLog, setLogLevel } from './logging.js';
-export { understandAtomicClause, collectParagraphClauses, understandDocument, } from './understanding/understand.js';
+export { NORMALIZED_CLAUSE_TYPES } from './understanding/normalized-clause.js';
+export { assertLayer2ClauseBlock, assertLayer2ClauseBlocks, assertLayer2FilingCanonicalOwnership, } from './understanding/validate-layer2.js';
+export { mergeTerminationDomainIntoCanonical } from './understanding/layer2-canonical-merge.js';
+export { DOMAIN_BY_CLAUSE_TYPE, PRIORITY_BY_TYPE, applyStrictExtractedFields, } from './understanding/layer2-field-ownership.js';
+export { LAYER2_CLAUSE_BLOCK_JSON_KEYS, normalizeClauseBlockOrder, prepareLayer2ClauseForExport, prepareLayer2ClausesForExport, stringifyLayer2ClausesStable, } from './understanding/layer2-clause-order.js';
+export { buildLayer1FilingInput, collectParagraphClauses, projectNormalizedClausesFromLayer1, } from './understanding/understand.js';
 //# sourceMappingURL=index.js.map

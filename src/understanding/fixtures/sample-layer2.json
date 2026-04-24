@@ -1,0 +1,138 @@
+[
+  {
+    "clause_id": "1.01.block.0",
+    "clause_type": "structural",
+    "source_block_id": "1.01.block.0",
+    "source_paragraph_ids": ["1.01.p1", "1.01.p8"],
+    "primary_entity_id": "org:gelesis_holdings_inc",
+    "counterparty_entity_ids": ["org:b_riley_principal_capital_ii_llc"],
+    "event_ids": ["event:agreement_execution_1.01.p1"],
+    "event_kinds": ["agreement_execution"],
+    "relationships": {
+      "governs": ["1.01.p1", "1.01.p8"],
+      "constrains": [],
+      "references": []
+    },
+    "extracted_fields": {
+      "structural": {
+        "agreement_reference_date_iso": "2022-08-11",
+        "execution_date_iso": "2022-08-11"
+      }
+    },
+    "confidence": 0.64,
+    "priority": "low"
+  },
+  {
+    "clause_id": "1.01.block.1",
+    "clause_type": "pricing_terms",
+    "source_block_id": "1.01.block.1",
+    "source_paragraph_ids": ["1.01.p2", "1.01.p3", "1.01.p4", "1.01.p7"],
+    "primary_entity_id": "org:gelesis_holdings_inc",
+    "counterparty_entity_ids": ["org:b_riley_principal_capital_ii_llc"],
+    "event_ids": [],
+    "event_kinds": [],
+    "relationships": {
+      "governs": ["1.01.p2", "1.01.p3", "1.01.p4", "1.01.p7"],
+      "constrains": [],
+      "references": []
+    },
+    "extracted_fields": {
+      "pricing": {
+        "mechanism": "vwap_discount",
+        "settlement_method": "VWAP",
+        "discount_rate": 0.03,
+        "modes": [
+          {
+            "purchase_mode": "regular_purchase",
+            "vwap_session": "full_session",
+            "discount_rate": 0.03,
+            "volume_adjusted": true,
+            "excludes_open_close": true
+          },
+          {
+            "purchase_mode": "intraday_purchase",
+            "vwap_session": "intraday_segments",
+            "discount_rate": 0.03,
+            "multi_segment_intraday": true
+          }
+        ]
+      }
+    },
+    "confidence": 0.96,
+    "priority": "high"
+  },
+  {
+    "clause_id": "1.01.block.2",
+    "clause_type": "constraint",
+    "source_block_id": "1.01.block.2",
+    "source_paragraph_ids": ["1.01.p5", "1.01.p6"],
+    "primary_entity_id": "org:gelesis_holdings_inc",
+    "counterparty_entity_ids": ["org:b_riley_principal_capital_ii_llc"],
+    "event_ids": [],
+    "event_kinds": [],
+    "relationships": {
+      "governs": ["1.01.p5", "1.01.p6"],
+      "constrains": ["org:b_riley_principal_capital_ii_llc", "org:gelesis_holdings_inc"],
+      "references": []
+    },
+    "extracted_fields": {
+      "constraints": {
+        "exchange_issuance": [
+          {
+            "share_cap": 14506475,
+            "issuance_cap_rate": 0.1999
+          }
+        ],
+        "beneficial_ownership": [
+          {
+            "cap_rate": 0.0499
+          }
+        ]
+      }
+    },
+    "confidence": 0.78,
+    "priority": "high"
+  },
+  {
+    "clause_id": "1.01.block.3",
+    "clause_type": "termination",
+    "source_block_id": "1.01.block.3",
+    "source_paragraph_ids": ["1.01.p9"],
+    "primary_entity_id": "org:gelesis_holdings_inc",
+    "counterparty_entity_ids": ["org:b_riley_principal_capital_ii_llc"],
+    "event_ids": ["event:termination_1_01_block_3"],
+    "event_kinds": ["agreement_termination"],
+    "relationships": {
+      "governs": ["1.01.p9"],
+      "constrains": [],
+      "references": []
+    },
+    "extracted_fields": {
+      "termination": {
+        "stated_term_months": 24,
+        "termination_notice_days": 5,
+        "aggregate_purchase_ceiling_usd": 50000000
+      }
+    },
+    "confidence": 0.86,
+    "priority": "high"
+  },
+  {
+    "clause_id": "3.02.block.0",
+    "clause_type": "structural",
+    "source_block_id": "3.02.block.0",
+    "source_paragraph_ids": ["3.02.p1"],
+    "primary_entity_id": "org:gelesis_holdings_inc",
+    "counterparty_entity_ids": ["org:b_riley_principal_capital_ii_llc"],
+    "event_ids": [],
+    "event_kinds": [],
+    "relationships": {
+      "governs": ["3.02.p1"],
+      "constrains": [],
+      "references": ["1.01.p1"]
+    },
+    "extracted_fields": {},
+    "confidence": 0.42,
+    "priority": "low"
+  }
+]

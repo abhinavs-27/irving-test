@@ -78,9 +78,9 @@ flowchart LR
   T --> SEC[extractSections]
   SEC --> PARA[segmentSectionsIntoParagraphs]
   PARA --> ENRICH[normalizeParagraphNodesAndGroupBlocks]
-  ENRICH --> UND[understandDocument]
-  UND --> JSON[understanding.json]
-  ENRICH --> TREE[structure.json]
+  ENRICH --> L1G[Layer 1 graph + sections]
+  L1G --> L2[projectNormalizedClausesFromLayer1]
+  L2 --> JSON[understanding.json]
 ```
 
 **Conceptual layers:**
@@ -89,7 +89,7 @@ flowchart LR
 |------|---------|-------------------|
 | **0** | Raw PDF → cleaned string | `loadDocument`, `createPdfParseLoader` |
 | **1** | Segments, paragraphs, cleanup, blocks | `extractSections`, `splitIntoParagraphs`, `normalizeParagraphText`, `groupParagraphsIntoBlocks`, `normalizeParagraphNodesAndGroupBlocks` |
-| **2** | Per-paragraph type + structured fields | `understandDocument`, `understandAtomicClause` |
+| **2** | One normalized clause per Layer 1 block (deterministic projection) | `projectNormalizedClausesFromLayer1`, `buildLayer1FilingInput` |
 
 **Contract clause path** (general agreements, not SEC Items): `extractClauses` + `buildHierarchy` operate on plain text and produce numbered clause trees — useful for future nested parsing **inside** a section body; the main SEC pipeline does not require them for top-level segmentation.
 
@@ -123,15 +123,11 @@ src/
 │   ├── hierarchy.ts           # Nest flat clauses by numbering
 │   └── print.ts               # Outline printer
 └── understanding/
-    ├── types.ts               # `LegalClauseType`, `ClauseUnderstandingRecord`
-    ├── classifier.ts          # Dominant clause type scoring
-    ├── extract-fields.ts      # Schema-driven extraction per type
-    ├── normalize-values.ts    # USD, %, ISO-ish dates
-    ├── entities.ts            # Raw party / instrument cues from text
-    ├── entity-resolution.ts   # Canonical instrument names, dedupe
-    ├── primary-intent.ts      # Deterministic intent slug
-    ├── confidence.ts          # Blended confidence score
-    └── understand.ts          # `understandDocument`, `understandAtomicClause`
+    ├── normalized-clause.ts      # Typed `NormalizedClauseRecord` + per–clause-type `extracted_fields`
+    ├── layer2-from-layer1.ts    # `projectNormalizedClausesFromLayer1`, `buildLayer1FilingInput`
+    ├── layer2-extracted-build.ts # Aggregation + normalization into query-ready shapes
+    ├── layer2-normalize.ts      # Percent / USD / time helpers
+    └── understand.ts             # Projection re-exports + `collectParagraphClauses`
 ```
 
 ---
@@ -242,69 +238,49 @@ This is what `analyze.ts` runs after `extractSections` + `segmentSectionsIntoPar
 
 ---
 
-## Layer 2 — Clause understanding
+## Layer 2 — Normalized clauses (deterministic)
 
-**Files:** `understanding/*`
+**Spec:** `specs/understanding_contract.md`  
+**Implementation:** `understanding/normalized-clause.ts`, `understanding/layer2-from-layer1.ts`, `understanding/layer2-extracted-build.ts`, `understanding/layer2-normalize.ts`
 
-**Input:** Parsed tree with **paragraph** nodes (typically after enrichment).  
-**Output:** One **`ClauseUnderstandingRecord` per unique `clause_id`** (paragraph id).
+**Input:** Full Layer 1 filing shape (`entity_registry`, `block_registry`, `events`, `relationships`, **`sections`** tree).  
+**Output:** One **`NormalizedClauseRecord` per Layer 1 block** (`clause_id` === block id). No per-paragraph rows.
 
-### Step 1 — Classification (`classifier.ts`)
+- **`clause_type`** uses a **fixed enum** (`structural`, `pricing_terms`, `constraint`, `termination`, `disclosure`, `obligation`, `indemnity`, `payment`, `other`); Layer 1 block types map into the first five today. There is **no** text classifier.
+- **`extracted_fields`** uses a **fixed set of optional domain keys** (`pricing`, `constraints`, `termination`, `disclosure`, `structural`, `obligations`) with **canonical sub-schemas** — no per-document field names, no raw Layer 1 arrays. Values are **aggregated** from `block.pricing_model`, merged paragraph facts, section constraints, and events, then normalized (USD numbers, **% → [0,1]**, ISO dates).
+- **`primary_entity_id`** is always a **string** (`""` when unresolved); **`counterparty_entity_ids`** come from linked **`events`** and **`relationships`** (`defines`, `constrains`), with issuer resolution via `resolveIssuerEntityId` when needed.
+- **`event_ids` / `event_kinds`** union **`events[].source_block_ids`** and **`relationships[type=triggers]`** from the block.
+- **`relationships`** exposes **`governs`**, **`constrains`**, **`references`** slice for that block source.
+- **`confidence`** reflects **structured completeness** (pricing model, facts, constraints, events), not classifier scores.
+- **`priority`:** high (pricing / constraint / termination), medium (disclosure / obligation / indemnity / payment), low (structural / other).
 
-- Each allowed **`LegalClauseType`** has a set of **regex/keyword signals** with accumulated scores.
-- **`classifyDominant(text)`** returns the **single** highest-scoring type; ties break with a fixed **`TYPE_PRIORITY`** order.
-- **`classificationStrength`** measures separation between first and second place (used in confidence).
-
-Allowed primary types:  
-`termination`, `indemnity`, `payment`, `confidentiality`, `obligations`, `constraints`, `pricing_terms`, `misc`.
-
-Governance-style cues are folded into **`obligations`** signals; definitional cues into **`misc`** / other scoring as appropriate — there is **no** separate “governance” or “definitions” output label.
-
-### Step 2 — Downgrade rule (`understand.ts`)
-
-If blended **confidence &lt; 0.5**, the clause is forced to **`misc`** **unless** the text shows **explicit** termination, pricing, or indemnity (`hasExplicitTermination`, `hasExplicitPricingTerms`, `hasExplicitIndemnity`). This reduces noisy “obligations” classifications on boilerplate.
-
-### Step 3 — Schema-driven extraction (`extract-fields.ts`)
-
-For the **chosen** `clause_type` only, fill a **fixed-shape** object:
-
-- **Money:** USD floats (dollars), arrays where multiple amounts appear.
-- **Percentages:** numeric (and arrays for regulatory thresholds).
-- **Dates:** ISO strings where parseable (`normalize-values.ts` + `material_dates_iso` fields where relevant).
-- **Formulas / basis:** symbolic enums (`VWAP`, `volume_weighted_average`, `timing_code`, etc.) — not pasted sentences.
-
-Unknown fields are **`null`**. The pipeline does **not** invent facts.
-
-### Step 4 — Entities (`entities.ts` + `entity-resolution.ts`)
-
-- **Raw extraction:** phrases like “between X and Y”, exhibit-style instrument names.
-- **Resolution:** `canonicalizeInstrument` maps common patterns to **canonical** labels; parties are trimmed and **deduped** case-insensitively.
-
-### Step 5 — Primary intent (`primary-intent.ts`)
-
-A short **deterministic slug** (e.g. `pricing_terms.vwap`, `termination.notice_days_10`) derived from **type + key extracted fields** — not free-form narrative.
-
-### Step 6 — Confidence (`confidence.ts`)
-
-**`blendConfidence(fieldFillRatio, classificationStrength)`** — combines how many fields are non-null with how decisive the classifier was.
-
-### Output record shape
+### Output record shape (abbrev.)
 
 ```json
 {
-  "clause_id": "1.01.p3",
+  "clause_id": "1.01.block.1",
   "clause_type": "pricing_terms",
-  "primary_intent": "pricing_terms.vwap",
-  "extracted_fields": { ... },
-  "entities": {
-    "parties": ["..."],
-    "instruments": ["..."]
+  "source_block_id": "1.01.block.1",
+  "source_paragraph_ids": ["1.01.p2", "1.01.p3"],
+  "primary_entity_id": "org:…",
+  "counterparty_entity_ids": ["org:…"],
+  "event_ids": [],
+  "event_kinds": [],
+  "extracted_fields": {
+    "pricing": {
+      "mechanism": "vwap_discount",
+      "settlement_method": "VWAP",
+      "discount_rate": 0.03,
+      "modes": [{ "purchase_mode": "regular_purchase", "vwap_session": "full_session", "discount_rate": 0.03 }]
+    }
   },
-  "confidence": 0.72
+  "relationships": { "governs": [], "constrains": [], "references": [] },
+  "confidence": 0.86,
+  "priority": "high"
 }
 ```
 
-**`understandDocument`** walks all paragraph nodes, **dedupes by `clause_id`**, and returns a JSON-serializable **array**.
+**`projectNormalizedClausesFromLayer1`** returns this JSON-serializable **array** (`analyze.ts` writes it with `--understand-out`).
 
 ---
 
@@ -322,9 +298,9 @@ Defined in `clause/clause.ts`:
 
 - **`id`**, **`type`** (`BlockKind`: overview, definitions, pricing_terms, …), **`children`:** paragraph clauses in order.
 
-### `ClauseUnderstandingRecord` (Layer 2)
+### `NormalizedClauseRecord` (Layer 2)
 
-See `understanding/types.ts`. This is **independent** from `ClauseType` — it describes **legal semantics** of a paragraph.
+See `understanding/normalized-clause.ts` and `specs/understanding_contract.md`. One row per Layer 1 **block**; **`extracted_fields`** uses the fixed optional domains (`Layer2ExtractedFields`), not a per–clause-type union.
 
 ---
 
@@ -351,18 +327,26 @@ import {
   extractSections,
   segmentSectionsIntoParagraphs,
   normalizeParagraphNodesAndGroupBlocks,
-  understandDocument,
+  buildLayer1FilingInput,
+  projectNormalizedClausesFromLayer1,
 } from 'irving'; // or relative path to dist after build
 ```
 
-Manual composition:
+Manual composition (after you also build entity registry, blocks, events, and relationships — see `analyze.ts`):
 
 ```ts
 const text = await loadDocument('filing.pdf');
 const sections = normalizeParagraphNodesAndGroupBlocks(
   segmentSectionsIntoParagraphs(extractSections(text)),
 );
-const intelligence = understandDocument(sections);
+const filing = buildLayer1FilingInput({
+  entity_registry,
+  block_registry,
+  events,
+  relationships,
+  sections,
+});
+const intelligence = projectNormalizedClausesFromLayer1(filing);
 ```
 
 Lower-level pieces (`extractClauses`, `buildHierarchy`, `groupParagraphsIntoBlocks`, etc.) are exported for experiments and future **nested** contract parsing inside a section.
@@ -381,7 +365,7 @@ Lower-level pieces (`extractClauses`, `buildHierarchy`, `groupParagraphsIntoBloc
 npm test
 ```
 
-Vitest runs tests under `src/**/*.test.ts` (normalization, SEC segmentation, semantic blocks, clause extract, understanding).
+Vitest runs tests under `src/**/*.test.ts` (normalization, SEC segmentation, semantic blocks, clause extract, Layer 2 projection).
 
 ---
 

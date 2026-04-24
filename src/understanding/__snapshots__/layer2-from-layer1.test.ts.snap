@@ -1,0 +1,284 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`projectNormalizedClausesFromLayer1 > matches Layer 2 v2 snapshot (sample-layer1 → projection) 1`] = `
+[
+  {
+    "clause_id": "1.01.block.0",
+    "clause_type": "structural",
+    "confidence": 0.64,
+    "counterparty_entity_ids": [
+      "org:b_riley_principal_capital_ii_llc",
+    ],
+    "event_ids": [
+      "event:agreement_execution_1.01.p1",
+    ],
+    "event_kinds": [
+      "agreement_execution",
+    ],
+    "extracted_fields": {
+      "structural": {
+        "agreement_reference_date_iso": "2022-08-11",
+        "execution_date_iso": "2022-08-11",
+      },
+    },
+    "primary_entity_id": "org:gelesis_holdings_inc",
+    "priority": "low",
+    "relationships": {
+      "constrains": [],
+      "governs": [
+        "1.01.p1",
+        "1.01.p8",
+      ],
+      "references": [],
+    },
+    "source_block_id": "1.01.block.0",
+    "source_paragraph_ids": [
+      "1.01.p1",
+      "1.01.p8",
+    ],
+  },
+  {
+    "clause_id": "1.01.block.1",
+    "clause_type": "pricing_terms",
+    "confidence": 0.96,
+    "counterparty_entity_ids": [
+      "org:b_riley_principal_capital_ii_llc",
+    ],
+    "event_ids": [],
+    "event_kinds": [],
+    "extracted_fields": {
+      "pricing": {
+        "discount_rate": 0.03,
+        "mechanism": "vwap_discount",
+        "modes": [
+          {
+            "discount_rate": 0.03,
+            "excludes_open_close": true,
+            "purchase_mode": "regular_purchase",
+            "volume_adjusted": true,
+            "vwap_session": "full_session",
+          },
+          {
+            "discount_rate": 0.03,
+            "multi_segment_intraday": true,
+            "purchase_mode": "intraday_purchase",
+            "vwap_session": "intraday_segments",
+          },
+        ],
+        "settlement_method": "VWAP",
+      },
+    },
+    "primary_entity_id": "org:gelesis_holdings_inc",
+    "priority": "high",
+    "relationships": {
+      "constrains": [],
+      "governs": [
+        "1.01.p2",
+        "1.01.p3",
+        "1.01.p4",
+        "1.01.p7",
+      ],
+      "references": [],
+    },
+    "source_block_id": "1.01.block.1",
+    "source_paragraph_ids": [
+      "1.01.p2",
+      "1.01.p3",
+      "1.01.p4",
+      "1.01.p7",
+    ],
+  },
+  {
+    "clause_id": "1.01.block.2",
+    "clause_type": "constraint",
+    "confidence": 0.78,
+    "counterparty_entity_ids": [
+      "org:b_riley_principal_capital_ii_llc",
+    ],
+    "event_ids": [],
+    "event_kinds": [],
+    "extracted_fields": {
+      "constraints": {
+        "beneficial_ownership": [
+          {
+            "cap_rate": 0.0499,
+          },
+        ],
+        "exchange_issuance": [
+          {
+            "issuance_cap_rate": 0.1999,
+            "share_cap": 14506475,
+          },
+        ],
+      },
+    },
+    "primary_entity_id": "org:gelesis_holdings_inc",
+    "priority": "high",
+    "relationships": {
+      "constrains": [
+        "org:b_riley_principal_capital_ii_llc",
+        "org:gelesis_holdings_inc",
+      ],
+      "governs": [
+        "1.01.p5",
+        "1.01.p6",
+      ],
+      "references": [],
+    },
+    "source_block_id": "1.01.block.2",
+    "source_paragraph_ids": [
+      "1.01.p5",
+      "1.01.p6",
+    ],
+  },
+  {
+    "clause_id": "1.01.block.3",
+    "clause_type": "termination",
+    "confidence": 0.86,
+    "counterparty_entity_ids": [
+      "org:b_riley_principal_capital_ii_llc",
+    ],
+    "event_ids": [
+      "event:termination_1_01_block_3",
+    ],
+    "event_kinds": [
+      "agreement_termination",
+    ],
+    "extracted_fields": {
+      "termination": {
+        "aggregate_purchase_ceiling_usd": 50000000,
+        "stated_term_months": 24,
+        "termination_notice_days": 5,
+      },
+    },
+    "primary_entity_id": "org:gelesis_holdings_inc",
+    "priority": "high",
+    "relationships": {
+      "constrains": [],
+      "governs": [
+        "1.01.p9",
+      ],
+      "references": [],
+    },
+    "source_block_id": "1.01.block.3",
+    "source_paragraph_ids": [
+      "1.01.p9",
+    ],
+  },
+  {
+    "clause_id": "1.01.block.4",
+    "clause_type": "disclosure",
+    "confidence": 0.73,
+    "counterparty_entity_ids": [
+      "org:b_riley_principal_capital_ii_llc",
+    ],
+    "event_ids": [],
+    "event_kinds": [],
+    "extracted_fields": {
+      "disclosure": {
+        "financial": {
+          "largest_amount_usd": 100000,
+        },
+        "issuance": {
+          "largest_share_count": 355361,
+        },
+      },
+    },
+    "primary_entity_id": "org:gelesis_holdings_inc",
+    "priority": "medium",
+    "relationships": {
+      "constrains": [],
+      "governs": [
+        "1.01.p10",
+        "1.01.p11",
+      ],
+      "references": [],
+    },
+    "source_block_id": "1.01.block.4",
+    "source_paragraph_ids": [
+      "1.01.p10",
+      "1.01.p11",
+    ],
+  },
+  {
+    "clause_id": "3.02.block.0",
+    "clause_type": "structural",
+    "confidence": 0.42,
+    "counterparty_entity_ids": [
+      "org:b_riley_principal_capital_ii_llc",
+    ],
+    "event_ids": [],
+    "event_kinds": [],
+    "extracted_fields": {},
+    "primary_entity_id": "org:gelesis_holdings_inc",
+    "priority": "low",
+    "relationships": {
+      "constrains": [],
+      "governs": [
+        "3.02.p1",
+      ],
+      "references": [
+        "1.01.p1",
+      ],
+    },
+    "source_block_id": "3.02.block.0",
+    "source_paragraph_ids": [
+      "3.02.p1",
+    ],
+  },
+  {
+    "clause_id": "9.01.block.0",
+    "clause_type": "structural",
+    "confidence": 0.56,
+    "counterparty_entity_ids": [
+      "org:b_riley_principal_capital_ii_llc",
+    ],
+    "event_ids": [],
+    "event_kinds": [],
+    "extracted_fields": {
+      "structural": {
+        "agreement_reference_date_iso": "2022-08-11",
+      },
+    },
+    "primary_entity_id": "org:gelesis_holdings_inc",
+    "priority": "low",
+    "relationships": {
+      "constrains": [],
+      "governs": [
+        "9.01.p1",
+      ],
+      "references": [],
+    },
+    "source_block_id": "9.01.block.0",
+    "source_paragraph_ids": [
+      "9.01.p1",
+    ],
+  },
+  {
+    "clause_id": "signature.block.0",
+    "clause_type": "structural",
+    "confidence": 0.56,
+    "counterparty_entity_ids": [],
+    "event_ids": [],
+    "event_kinds": [],
+    "extracted_fields": {
+      "structural": {
+        "agreement_reference_date_iso": "2022-08-12",
+      },
+    },
+    "primary_entity_id": "org:gelesis_holdings_inc",
+    "priority": "low",
+    "relationships": {
+      "constrains": [],
+      "governs": [
+        "signature.p1",
+      ],
+      "references": [],
+    },
+    "source_block_id": "signature.block.0",
+    "source_paragraph_ids": [
+      "signature.p1",
+    ],
+  },
+]
+`;

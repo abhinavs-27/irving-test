@@ -1,6 +1,8 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
-import { buildDocumentRelationships, buildSectionConstraints, extractSections, loadDocument, normalizeParagraphNodesAndGroupBlocks, printClauseTree, segmentSectionsIntoParagraphs, setLogLevel, understandDocument, validateLayer1Tree, validateLayer2Tree, } from './index.js';
+import { buildDocumentRelationships, buildSectionConstraints, extractSections, loadDocument, normalizeParagraphNodesAndGroupBlocks, printClauseTree, segmentSectionsIntoParagraphs, setLogLevel, validateLayer1Tree, validateLayer2Tree, } from './index.js';
+import { buildLayer1FilingInput, projectNormalizedClausesFromLayer1, } from './understanding/layer2-from-layer1.js';
+import { stringifyLayer2ClausesStable } from './understanding/layer2-clause-order.js';
 import { buildBlockRegistry } from './layer1/block-registry.js';
 import { normalizeLayer1Graph, validateLayer1Graph, } from './layer1/layer1-graph-compile.js';
 import { applyExtractionContractFixes, } from './layer1/extraction-contract-fix.js';
@@ -205,9 +207,16 @@ Examples:
         process.exit(1);
     }
     if (understandOut) {
-        const intelligence = understandDocument(sections);
+        const filing = buildLayer1FilingInput({
+            entity_registry,
+            block_registry: graphPayload.block_registry,
+            events: graphPayload.events,
+            relationships,
+            sections,
+        });
+        const intelligence = projectNormalizedClausesFromLayer1(filing);
         const abs = resolve(understandOut);
-        await writeOutputFile(understandOut, JSON.stringify(intelligence, null, 2));
+        await writeOutputFile(understandOut, stringifyLayer2ClausesStable(intelligence));
         console.error(`[analyze] wrote clause understanding (${intelligence.length} rows) → ${abs}`);
     }
     if (previewChars > 0) {
