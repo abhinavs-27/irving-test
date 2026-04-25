@@ -62,4 +62,6 @@ export { DOMAIN_BY_CLAUSE_TYPE, PRIORITY_BY_TYPE, applyStrictExtractedFields, } 
 export { LAYER2_CLAUSE_BLOCK_JSON_KEYS, normalizeClauseBlockOrder, prepareLayer2ClauseForExport, prepareLayer2ClausesForExport, stringifyLayer2ClausesStable, } from './understanding/layer2-clause-order.js';
 export type { BuildLayer1FilingInput } from './understanding/layer2-from-layer1.js';
 export { buildLayer1FilingInput, collectParagraphClauses, projectNormalizedClausesFromLayer1, } from './understanding/understand.js';
+export type { Agreement, AgreementConstraints, AgreementConflict, AgreementDisclosure, AgreementMetadata, AgreementPricing, AgreementTerms, AgreementTermination, RiskFlag, } from './understanding/layer3-agreement.js';
+export { buildAgreements, buildAgreement, computeRiskFlags, generateAgreementId, groupByAgreement, summarizeAgreement, } from './understanding/layer3-agreement.js';
 //# sourceMappingURL=index.d.ts.map

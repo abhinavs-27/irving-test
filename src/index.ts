@@ -212,3 +212,22 @@ export {
   collectParagraphClauses,
   projectNormalizedClausesFromLayer1,
 } from './understanding/understand.js';
+export type {
+  Agreement,
+  AgreementConstraints,
+  AgreementConflict,
+  AgreementDisclosure,
+  AgreementMetadata,
+  AgreementPricing,
+  AgreementTerms,
+  AgreementTermination,
+  RiskFlag,
+} from './understanding/layer3-agreement.js';
+export {
+  buildAgreements,
+  buildAgreement,
+  computeRiskFlags,
+  generateAgreementId,
+  groupByAgreement,
+  summarizeAgreement,
+} from './understanding/layer3-agreement.js';

@@ -19,6 +19,7 @@ import {
   projectNormalizedClausesFromLayer1,
 } from './understanding/layer2-from-layer1.js';
 import { stringifyLayer2ClausesStable } from './understanding/layer2-clause-order.js';
+import { buildAgreements } from './understanding/layer3-agreement.js';
 import type { BlockPricingModel } from './layer1/types.js';
 import { buildBlockRegistry } from './layer1/block-registry.js';
 import {
@@ -40,6 +41,7 @@ function parseArgs(argv: string[]): {
   outText: string | undefined;
   outJson: string | undefined;
   understandOut: string | undefined;
+  agreementsOut: string | undefined;
   previewChars: number;
   debug: boolean;
   printFlat: boolean;
@@ -48,6 +50,7 @@ function parseArgs(argv: string[]): {
   let outText: string | undefined;
   let outJson: string | undefined;
   let understandOut: string | undefined;
+  let agreementsOut: string | undefined;
   let previewChars = 1200;
   let debug = false;
   let printFlat = false;
@@ -62,6 +65,8 @@ function parseArgs(argv: string[]): {
       outJson = a.slice('--out-json='.length);
     else if (a.startsWith('--understand-out='))
       understandOut = a.slice('--understand-out='.length);
+    else if (a.startsWith('--agreements-out='))
+      agreementsOut = a.slice('--agreements-out='.length);
     else if (a.startsWith('--preview=')) {
       const n = Number.parseInt(a.slice('--preview='.length), 10);
       previewChars = Number.isFinite(n) ? Math.max(0, n) : 0;
@@ -73,6 +78,7 @@ function parseArgs(argv: string[]): {
     outText,
     outJson,
     understandOut,
+    agreementsOut,
     previewChars,
     debug,
     printFlat,
@@ -136,6 +142,7 @@ async function main(): Promise<void> {
     outText,
     outJson,
     understandOut,
+    agreementsOut,
     previewChars,
     debug,
     printFlat,
@@ -150,6 +157,7 @@ Options:
   --out-text=<path>   Write full extracted plain text (whole document)
   --out-json=<path>         Write section tree JSON
   --understand-out=<path>   Write clause understanding JSON array (deterministic)
+  --agreements-out=<path>   Write Layer 3 agreements JSON (from same ClauseBlocks as L2)
   --preview=<n>       Console preview length (chars); use 0 to skip (default 1200)
   --flat              Print flat clause list with text length (console)
   --debug             Verbose logging (skipped ids, repeated-line hints)
@@ -300,7 +308,7 @@ Examples:
     process.exit(1);
   }
 
-  if (understandOut) {
+  if (understandOut || agreementsOut) {
     const filing = buildLayer1FilingInput({
       entity_registry,
       block_registry: graphPayload.block_registry,
@@ -309,11 +317,21 @@ Examples:
       sections,
     });
     const intelligence = projectNormalizedClausesFromLayer1(filing);
-    const abs = resolve(understandOut);
-    await writeOutputFile(understandOut, stringifyLayer2ClausesStable(intelligence));
-    console.error(
-      `[analyze] wrote clause understanding (${intelligence.length} rows) → ${abs}`,
-    );
+    if (understandOut) {
+      const abs = resolve(understandOut);
+      await writeOutputFile(understandOut, stringifyLayer2ClausesStable(intelligence));
+      console.error(
+        `[analyze] wrote clause understanding (${intelligence.length} rows) → ${abs}`,
+      );
+    }
+    if (agreementsOut) {
+      const agreements = buildAgreements(intelligence);
+      const absA = resolve(agreementsOut);
+      await writeOutputFile(agreementsOut, `${JSON.stringify(agreements, null, 2)}\n`);
+      console.error(
+        `[analyze] wrote Layer 3 agreements (${agreements.length}) → ${absA}`,
+      );
+    }
   }
 
   if (previewChars > 0) {

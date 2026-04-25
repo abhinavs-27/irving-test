@@ -42,4 +42,5 @@ export { mergeTerminationDomainIntoCanonical } from './understanding/layer2-cano
 export { DOMAIN_BY_CLAUSE_TYPE, PRIORITY_BY_TYPE, applyStrictExtractedFields, } from './understanding/layer2-field-ownership.js';
 export { LAYER2_CLAUSE_BLOCK_JSON_KEYS, normalizeClauseBlockOrder, prepareLayer2ClauseForExport, prepareLayer2ClausesForExport, stringifyLayer2ClausesStable, } from './understanding/layer2-clause-order.js';
 export { buildLayer1FilingInput, collectParagraphClauses, projectNormalizedClausesFromLayer1, } from './understanding/understand.js';
+export { buildAgreements, buildAgreement, computeRiskFlags, generateAgreementId, groupByAgreement, summarizeAgreement, } from './understanding/layer3-agreement.js';
 //# sourceMappingURL=index.js.map
