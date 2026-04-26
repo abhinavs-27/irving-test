@@ -1,6 +1,6 @@
 # Irving — Legal document parsing pipeline
 
-Irving reconstructs structure and machine-readable semantics from legal PDFs (starting with SEC filings like Form 8-K). The system is **deterministic**: no LLMs in the core pipeline. Everything is regex, heuristics, scoring, and explicit schemas so outputs are **debuggable**, **replayable**, and suitable as input for embeddings, retrieval, rule engines, or downstream LLMs.
+Irving reconstructs structure and machine-readable semantics from legal PDFs (starting with SEC filings like Form 8-K). The core pipeline (Layers 0–3) is **deterministic**: no LLMs — everything is regex, heuristics, scoring, and explicit schemas so outputs are **debuggable**, **replayable**, and stable across runs. Layer 4 adds an LLM-powered agent pipeline on top of the structured output to generate a ranked issues list.
 
 ---
 
@@ -17,7 +17,8 @@ Irving reconstructs structure and machine-readable semantics from legal PDFs (st
 9. [Layer 2 — ClauseBlock (semantic truth)](#layer-2--clauseblock-semantic-truth)
 10. [Layer 3 — Agreement synthesis](#layer-3--agreement-synthesis)
 11. [Layer 3 RAG — Storage & retrieval](#layer-3-rag--storage--retrieval)
-12. [Core data models](#core-data-models)
+12. [Layer 4 — Agent issues pipeline](#layer-4--agent-issues-pipeline)
+13. [Core data models](#core-data-models)
 13. [CLI (`analyze.ts`)](#cli-analyzets)
 14. [Library API (`src/index.ts`)](#library-api-srcindexts)
 15. [Logging](#logging)
@@ -53,33 +54,30 @@ npm run build
 | **Run full analysis** (PDF → text, structure JSON, optional Layer 2) | `npm run analyze -- <file.pdf> [options]` (alias: `npm run demo -- …`) |
 | **Run the test suite** (Vitest, once) | `npm test` |
 | **Layer 3 only** (read `understanding.json` → write agreements) | `npm run agreements -- --in=./out/understanding.json --out=./out/agreements.json` |
-| **RAG: ingest** clauses + agreements into Postgres | `npm run rag:ingest -- --clauses=./out/understanding.json --agreements=./out/agreements.json` |
+| **RAG: ingest** clauses + agreements into file-based vector store | `npm run rag:ingest -- --clauses=./out/understanding.json --agreements=./out/agreements.json` |
 | **RAG: query** the indexed data with a natural-language question | `npm run rag:query -- "What are the risky clauses?"` |
+| **Layer 4** — run agent issues pipeline, write `issues.json` | `npm run layer4 -- --clauses=./out/understanding.json --out=./out/issues.json` |
 | **Watch mode for tests** | `npx vitest` |
 
-### RAG prerequisites
+### Prerequisites (RAG + Layer 4)
 
-The RAG commands require:
+Both require **Ollama** running locally — no API keys needed:
 
-1. **Postgres with pgvector** running locally (or set `DATABASE_URL`):
-   ```bash
-   # macOS via Homebrew
-   brew install postgresql pgvector
-   createdb irving
-   ```
-   Or use Docker:
-   ```bash
-   docker run -d --name irving-pg \
-     -e POSTGRES_DB=irving -e POSTGRES_PASSWORD=postgres \
-     -p 5432:5432 ankane/pgvector
-   ```
+```bash
+brew install ollama
+ollama pull nomic-embed-text   # embeddings (768-dim, ~274 MB)
+ollama pull qwen2.5:7b         # LLM for queries + issue analysis (~4.7 GB)
+```
 
-2. **API keys** — export before running `rag:ingest` or `rag:query`:
-   ```bash
-   export OPENAI_API_KEY=sk-...        # embeddings (text-embedding-3-small)
-   export ANTHROPIC_API_KEY=sk-ant-... # decompose + synthesize (Claude)
-   export DATABASE_URL=postgresql://localhost:5432/irving  # optional, this is the default
-   ```
+Ollama starts automatically on Mac after install. If it's not running: `ollama serve`
+
+The `.env` file at the project root sets optional overrides:
+
+```bash
+# OLLAMA_HOST=http://localhost:11434   # default
+# OLLAMA_MODEL=qwen2.5:7b             # default; llama3.2 is faster but less accurate
+# VECTOR_STORE_DIR=./out/vector-store  # default
+```
 
 ### Full end-to-end example
 
@@ -90,15 +88,17 @@ npm run analyze -- ./8-K.pdf \
   --agreements-out=./out/agreements.json \
   --preview=0
 
-# 2. Ingest into Postgres/pgvector (creates schema + embeddings automatically)
+# 2. Embed + store in local vector files (./out/vector-store/)
 npm run rag:ingest -- \
   --clauses=./out/understanding.json \
   --agreements=./out/agreements.json
 
-# 3. Query
+# 3. Natural-language queries against the vector store
 npm run rag:query -- "What are the risky clauses?"
-npm run rag:query -- "Find issues"
 npm run rag:query -- "What termination protections exist?"
+
+# 4. Agent issues pipeline → structured issues list
+npm run layer4 -- --clauses=./out/understanding.json --out=./out/issues.json
 ```
 
 Run the analyzer on a PDF (prints the section tree; use `--preview=0` to skip a long text preview):
@@ -141,9 +141,10 @@ Paths are relative to your **current shell working directory** unless you pass a
 | `npm run analyze` or `npm run demo` | `tsx src/analyze.ts` — same as [CLI](#cli-analyzets). |
 | `npm test` | `vitest run` — all tests, single pass, non-zero on failure. |
 | `npm run agreements` | `tsx src/layer3-cli.ts` — **Layer 3** from an existing `understanding.json` (requires `--in=` and `--out=`). |
-| `npm run rag:ingest` | `tsx src/rag-ingest-cli.ts` — embed + store clauses/agreements in Postgres. Requires `--clauses=` and/or `--agreements=`. |
-| `npm run rag:query` | `tsx src/rag-query-cli.ts` — decompose, retrieve, and synthesize an answer. Pass the question as trailing args. |
-| `npx vitest` | interactive / watch test runner. |
+| `npm run rag:ingest` | Embed + store clauses/agreements in the local file-based vector store. Requires `--clauses=` and/or `--agreements=`. |
+| `npm run rag:query` | Decompose a natural-language question, retrieve matching clauses, synthesize an answer. Pass the question as trailing args. |
+| `npm run layer4` | Run the Layer 4 agent issues pipeline. Requires `--clauses=` and `--out=`. Optional `--agreement=<index>`. |
+| `npx vitest` | Interactive / watch test runner. |
 
 You can also run the CLIs directly: `npx tsx src/analyze.ts <file.pdf> …` or `npx tsx src/layer3-cli.ts --in=… --out=…`.
 
@@ -163,9 +164,12 @@ flowchart LR
   L1B --> L2[Layer 2: projectNormalizedClausesFromLayer1]
   L2 --> L2J[--understand-out / ClauseBlocks]
   L2J --> L3[Layer 3: --agreements-out / npm run agreements]
-  L2J --> RAG[rag:ingest → Postgres / pgvector]
+  L2J --> RAG[rag:ingest → file-based vector store]
   L3 --> RAG
   RAG --> Q[rag:query → decompose → retrieve → synthesize]
+  L2J --> L4[layer4 → classify → check → aggregate → rank]
+  L3 --> L4
+  L4 --> IR[issues.json]
 ```
 
 **Conceptual layers:**
@@ -176,7 +180,8 @@ flowchart LR
 | **1** | SEC Items, paragraphs, **semantic blocks**, `facts` / `signals`, **entity_registry**, **block_registry**, **events**, **relationships**, section **constraints** | `extractSections`, `splitIntoParagraphs`, `normalizeParagraphNodesAndGroupBlocks`, `buildEntityRegistry`, `buildBlockRegistry`, `buildDocumentEvents`, `buildDocumentRelationships`, `validateExtractionContract`, `validateLayer1Tree`, `validateLayer2Tree` |
 | **2** | One **ClauseBlock** per Layer 1 **block**; strict `extracted_fields` | `projectNormalizedClausesFromLayer1`, `prepareLayer2ClauseForExport`, `assertLayer2ClauseBlocks` |
 | **3** | **Agreement** roll-up per (issuer, counterparties) for analytics / RAG | `buildAgreements`, `computeRiskFlags`, `summarizeAgreement` |
-| **3 RAG** | **Postgres/pgvector** storage + multi-stage retrieval + query decomposition + synthesis | `rag:ingest`, `rag:query`, `src/rag/` |
+| **3 RAG** | File-based vector store + multi-stage retrieval + query decomposition + synthesis (Ollama) | `rag:ingest`, `rag:query`, `src/rag/` |
+| **4** | LLM agent pipeline: classify → check → aggregate → rank → `IssueReport` | `layer4`, `src/layer4/` |
 
 **Optional:** `extractClauses` + `buildHierarchy` for contract-style **numbered** clauses on plain text (not required for the SEC top-level path).
 
@@ -202,16 +207,26 @@ src/
 ├── index.ts                   # Public library exports
 ├── logging.ts                 # `legalDocLog`, `setLogLevel`
 ├── layer3-cli.ts              # Standalone Layer 3 CLI (understanding.json → agreements.json)
-├── rag-ingest-cli.ts          # RAG ingest CLI (Layer 2 + 3 → Postgres/pgvector)
+├── rag-ingest-cli.ts          # RAG ingest CLI (Layer 2 + 3 → file-based vector store)
 ├── rag-query-cli.ts           # RAG query CLI (natural-language question → answer)
+├── layer4-cli.ts              # Layer 4 CLI (understanding.json → issues.json)
 ├── rag/
-│   ├── db.ts                  # Pool, `ensureSchema` (clauses + agreements tables + HNSW indexes)
-│   ├── embed.ts               # OpenAI text-embedding-3-small wrapper, `pgVector` formatter
+│   ├── db.ts                  # File paths for vector store (VECTOR_STORE_DIR)
+│   ├── embed.ts               # Ollama nomic-embed-text (768-dim) via OpenAI-compatible API
 │   ├── summarize-clause.ts    # `ClauseBlock` → dense plain text for embedding
-│   ├── ingest.ts              # `ingestClauses`, `ingestAgreements` (upsert with embeddings)
-│   ├── retrieve.ts            # `retrieveClauses` (cosine + type filter + boosts), `retrieveAgreements`
-│   ├── decompose.ts           # `decomposeQuery` — Claude breaks question into typed sub-queries
+│   ├── ingest.ts              # `ingestClauses`, `ingestAgreements` (upsert JSON files)
+│   ├── retrieve.ts            # `retrieveClauses` (in-memory cosine + type filter + boosts)
+│   ├── decompose.ts           # `decomposeQuery` — Ollama breaks question into typed sub-queries
 │   └── query.ts               # `query` — orchestrates decompose → retrieve → synthesize
+├── layer4/
+│   ├── types.ts               # `ClauseClassification`, `ClauseIssue`, `IssueReport`, `PipelineLogEntry`
+│   ├── llm.ts                 # Shared Ollama client, `chat()`, `extractJson()`
+│   ├── log.ts                 # `logStep()` — prints + returns a `PipelineLogEntry`
+│   ├── classify.ts            # Step 1: classify clause, determine risk_focus, decide skip
+│   ├── check.ts               # Step 2: find issues in a single clause
+│   ├── aggregate.ts           # Step 3: dedup + find agreement-level gaps
+│   ├── rank.ts                # Step 4: deterministic sort by severity + category
+│   └── pipeline.ts            # `runPipeline()` — orchestrates all four steps
 ├── document/
 │   ├── document-loader.ts     # Interface for swappable loaders
 │   ├── load-document.ts       # `loadDocument`, `setDefaultDocumentLoader`
@@ -450,26 +465,25 @@ This is what `analyze.ts` runs after `extractSections` + `segmentSectionsIntoPar
 ## Layer 3 RAG — Storage & retrieval
 
 **Files:** `src/rag/` (7 modules), `src/rag-ingest-cli.ts`, `src/rag-query-cli.ts`  
-**Spec:** `specs/rag.md`
+**Spec:** `specs/rag.md`  
+**Requires:** Ollama running locally (see [Prerequisites](#prerequisites-rag--layer-4))
 
-Turns the deterministic Layer 2/3 outputs into a queryable system using Postgres/pgvector, OpenAI embeddings, and Claude for decomposition and synthesis.
+Turns the deterministic Layer 2/3 outputs into a queryable system. Everything runs locally — no database server, no API keys.
 
-### Step 6: Storage schema
+### Step 6: Storage
 
-Two tables, both with `vector(1536)` columns and **HNSW indexes** (work on empty tables):
+Embeddings and metadata are stored as JSON files under `./out/vector-store/` (configurable via `VECTOR_STORE_DIR`):
 
-| Table | Contents |
-|-------|----------|
-| `clauses` | One row per `ClauseBlock`: `clause_type`, `priority`, `confidence`, `extracted_fields` (JSONB), `relationships` (JSONB), plain-text `summary`, `cross_reference_count`, `embedding vector(1536)` |
-| `agreements` | One row per `Agreement`: pricing/constraints/termination/disclosure (JSONB), `risk_flags` (JSONB), plain-text `summary`, `embedding vector(1536)` |
+| File | Contents |
+|------|----------|
+| `clauses.json` | One record per `ClauseBlock`: clause_type, priority, confidence, plain-text summary, cross_reference_count, 768-dim embedding |
+| `agreements.json` | One record per `Agreement`: risk_flag_count, plain-text summary, 768-dim embedding |
 
-`ensureSchema()` in `src/rag/db.ts` creates both tables and indexes idempotently on first run — no separate migration step needed.
-
-**Embeddings:** `src/rag/embed.ts` wraps `text-embedding-3-small` (1536-dim). `src/rag/summarize-clause.ts` converts a `ClauseBlock` to dense plain text (all typed facts: dates, rates, caps, ceiling, modes, cross-references) before embedding.
+**Embeddings:** `src/rag/embed.ts` wraps Ollama's `nomic-embed-text` model (768-dim) via its OpenAI-compatible API. `src/rag/summarize-clause.ts` converts a `ClauseBlock` into dense plain text before embedding. Ingest upserts by ID so re-running after a PDF re-analysis is safe.
 
 ### Step 7: Retrieval
 
-`src/rag/retrieve.ts` scores each clause as:
+`src/rag/retrieve.ts` loads the JSON files into memory and scores each clause:
 
 ```
 score = cosine_similarity(query_embedding, clause_embedding)
@@ -477,29 +491,17 @@ score = cosine_similarity(query_embedding, clause_embedding)
       + cross_ref_boost  (min(cross_reference_count × 0.05, 0.15))
 ```
 
-Filtered by `clause_type = ANY(...)` before scoring so the vector scan only touches relevant rows. Separate `retrieveAgreements` does pure cosine search on the agreements table.
+Optionally filtered by `clauseTypes` before scoring. Separate `retrieveAgreements` does pure cosine search on the agreements file. For the scale of a single filing (dozens of clauses), in-memory scan is instant.
 
 ### Step 8: Query decomposition (agent-lite)
 
-`src/rag/decompose.ts` sends the user question to **claude-opus-4-7** with a structured prompt that returns a JSON array of sub-queries, each with:
+`src/rag/decompose.ts` sends the user question to the local Ollama model with a structured prompt that returns a JSON array of sub-queries, each with:
 
 - `question` — a focused retrieval question
 - `clauseTypes` — which clause types to filter on
 - `riskFocuses` — which risk flag codes are relevant
 
-Example: `"Find issues"` decomposes into ~4 sub-queries targeting termination clauses, pricing dilution, ownership protections, and missing/conflicting constraints. Each sub-query runs its own targeted retrieval call in parallel.
-
-`src/rag/query.ts` orchestrates the full pipeline:
-
-```
-user question
-  → decomposeQuery()     [claude-opus-4-7]
-  → retrieveClauses()    [pgvector, parallel per sub-query]
-  → messages.create()    [claude-sonnet-4-6, prompt-cached context block]
-  → { answer, subQueries, usage }
-```
-
-The synthesis call caches the retrieved context with `cache_control: ephemeral` so repeated questions over the same corpus reuse the cache.
+Example: `"Find issues"` decomposes into ~4 sub-queries targeting termination, pricing dilution, ownership protections, and missing constraints. Each sub-query runs its own targeted retrieval call, and the results are synthesized in a single Ollama chat call.
 
 ### Ingest CLI
 
@@ -507,21 +509,109 @@ The synthesis call caches the retrieved context with `cache_control: ephemeral` 
 npm run rag:ingest -- --clauses=./out/understanding.json --agreements=./out/agreements.json
 ```
 
-Flags:
 - `--clauses=<path>` — JSON array of `ClauseBlock` (Layer 2 output)
 - `--agreements=<path>` — JSON array of `Agreement` (Layer 3 output)
 
-Both are optional but at least one must be provided. Upserts on re-run (safe to run again after re-analyzing a PDF).
+Both are optional but at least one must be provided.
 
 ### Query CLI
 
 ```bash
 npm run rag:query -- "What are the risky clauses?"
-npm run rag:query -- "Find issues"
 npm run rag:query -- "What termination protections exist?"
 ```
 
-Stderr shows decomposition and token usage; stdout is the synthesized answer.
+Stderr shows the decomposition (sub-queries + hit counts) and token usage; stdout is the synthesized answer.
+
+---
+
+## Layer 4 — Agent issues pipeline
+
+**Files:** `src/layer4/` (7 modules), `src/layer4-cli.ts`  
+**Requires:** Ollama running locally (see [Prerequisites](#prerequisites-rag--layer-4))
+
+Reads Layer 2 `ClauseBlock[]` and a Layer 3 `Agreement`, runs each clause through a four-step LLM pipeline, and writes a ranked `IssueReport` to disk.
+
+### Pipeline steps
+
+```
+for each clause:
+  Step 1 — classify   decide what risks to look for; skip empty structural clauses
+  Step 2 — check      find specific issues in the clause
+
+once across all clauses:
+  Step 3 — aggregate  dedup + ask the LLM what important clause types are entirely absent
+  Step 4 — rank       deterministic sort: critical → high → medium → low, then by category
+```
+
+Every step logs its clause_id, duration, and result to stderr so the run is fully observable.
+
+### Issue output shape
+
+```json
+{
+  "issue": "No termination for convenience",
+  "clause_id": "1.01.block.3",
+  "clause_type": "termination",
+  "severity": "high",
+  "reason": "Company cannot exit the agreement without cause.",
+  "recommendation": "Add a termination for convenience clause with reasonable notice.",
+  "category": "missing_protection"
+}
+```
+
+`severity`: `critical` | `high` | `medium` | `low`  
+`category`: `missing_protection` | `risky_term` | `inconsistency` | `vague_language` | `asymmetric_obligation` | `other`
+
+### Full report shape
+
+```json
+{
+  "agreement_id": "agrm_...",
+  "clause_count": 7,
+  "total_issues": 9,
+  "critical": 0, "high": 4, "medium": 3, "low": 2,
+  "issues": [ ... ],
+  "log": [
+    { "step": "classify", "clause_id": "1.01.block.1", "duration_ms": 312, "result": "focus: discount terms, variable pricing" },
+    { "step": "check",    "clause_id": "1.01.block.1", "duration_ms": 841, "result": "2 issue(s)" },
+    ...
+  ]
+}
+```
+
+### Design decisions
+
+- **Sequential per clause** — Ollama doesn't benefit from parallel LLM requests; sequential also makes the log readable.
+- **`quickSkip` before classify LLM call** — structural clauses with no extracted fields and `other`-typed clauses are skipped without a model call.
+- **All LLM responses validated** — severity and category are range-checked; malformed JSON falls back to `[]` so a bad response never crashes the run.
+- **Step 3 is the only cross-clause LLM call** — it sees the full list of clause types present and finds what's entirely absent (e.g. no governing law, no limitation of liability).
+- **Step 4 is pure code** — ranking is deterministic so reruns produce stable output.
+
+### CLI
+
+```bash
+npm run layer4 -- --clauses=./out/understanding.json --out=./out/issues.json
+# analyze the second agreement in the file (default is 0)
+npm run layer4 -- --clauses=./out/understanding.json --out=./out/issues.json --agreement=1
+```
+
+Flags:
+- `--clauses=<path>` — Layer 2 `understanding.json`
+- `--out=<path>` — where to write `issues.json`
+- `--agreement=<index>` — which agreement to analyze (default: `0`, the first)
+
+The CLI prints a summary to stderr after completion:
+
+```
+[layer4] done — 9 issue(s) → /path/to/issues.json
+  critical: 0  high: 4  medium: 3  low: 2
+
+Top issues:
+  [HIGH] Short termination notice period (1.01.block.3)
+  [HIGH] Broad exchange issuance cap (1.01.block.2)
+  ...
+```
 
 ---
 
@@ -546,6 +636,10 @@ See `understanding/normalized-clause.ts` and `specs/understanding_contract.md`. 
 ### `Agreement` (Layer 3)
 
 See `understanding/layer3-agreement.ts`. One **synthesized** object per **(primary_entity_id, counterparty set)** after `buildAgreements`. Not a replacement for Layer 2 — it aggregates **ClauseBlocks** for analytics and RAG.
+
+### `ClauseIssue` and `IssueReport` (Layer 4)
+
+See `layer4/types.ts`. `ClauseIssue` is the unit of output from the agent pipeline — one issue per identified problem, with `clause_id`, `severity`, `reason`, `recommendation`, and `category`. `IssueReport` wraps the full ranked list, per-severity counts, and the pipeline execution log.
 
 ### `Layer1GraphPayload` and validation
 
@@ -664,10 +758,11 @@ npx vitest run src/understanding/layer2-from-layer1.test.ts -u
 
 ## Future directions
 
-- **CLI** — optional **`--agreements-summary-out`** to write `summarizeAgreement` text for each agreement (not implemented yet).
+- **Layer 4 improvements** — parallel clause analysis once Ollama supports concurrent requests reliably; per-issue `source_text` snippets linking back to the original PDF paragraphs; a confidence score on each issue.
+- **Multi-document** — ingest multiple filings, filter RAG retrieval and Layer 4 analysis by `primary_entity_id` or filing date range.
 - Nested **contract clause** parsing inside each Item body (`extractClauses` + hierarchy) where Items contain long, numbered agreements.
 - Additional **document profiles** (credit agreement, merger agreement) with dedicated segmenters.
-- **RAG improvements** — multi-document retrieval (ingest multiple filings, filter by `primary_entity_id`), re-ranking with a cross-encoder, and streaming synthesis responses.
+- **RAG improvements** — re-ranking with a cross-encoder; switching to a proper vector DB (LanceDB or Qdrant) when corpus size grows beyond a single filing.
 
 ---
 

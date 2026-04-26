@@ -10,6 +10,7 @@
     "agreements": "tsx src/layer3-cli.ts",
     "rag:ingest": "node --env-file=.env --import=tsx/esm src/rag-ingest-cli.ts",
     "rag:query": "node --env-file=.env --import=tsx/esm src/rag-query-cli.ts",
+    "layer4": "node --env-file=.env --import=tsx/esm src/layer4-cli.ts",
     "test": "vitest run"
   },
   "keywords": [],
