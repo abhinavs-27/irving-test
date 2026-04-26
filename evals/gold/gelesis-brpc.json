@@ -1,0 +1,61 @@
+{
+  "description": "Gelesis Holdings / B. Riley Principal Capital II — Capital on Demand Purchase Agreement (8-K, 2022-08-11)",
+  "agreement_id": "agrm_27230f631f0fa55d",
+  "notes": "Gold issues manually identified. clause_id is optional — omit when the issue is agreement-level rather than tied to a specific clause.",
+  "issues": [
+    {
+      "issue": "Short termination notice period",
+      "clause_id": "1.01.block.3",
+      "severity": "high",
+      "category": "risky_term",
+      "notes": "Only 5 business days notice required to terminate — unusually short for a $50M commitment"
+    },
+    {
+      "issue": "High discount rate combined with variable pricing modes",
+      "clause_id": "1.01.block.1",
+      "severity": "high",
+      "category": "risky_term",
+      "notes": "3% VWAP discount across multiple purchase modes creates elevated dilution exposure"
+    },
+    {
+      "issue": "Broad exchange issuance cap near regulatory maximum",
+      "clause_id": "1.01.block.2",
+      "severity": "medium",
+      "category": "risky_term",
+      "notes": "19.99% issuance cap is at the practical ceiling for exchange listing rules"
+    },
+    {
+      "issue": "Weak beneficial ownership protection",
+      "clause_id": "1.01.block.2",
+      "severity": "high",
+      "category": "missing_protection",
+      "notes": "4.99% cap barely clears the Section 13(d) disclosure threshold — minimal protection"
+    },
+    {
+      "issue": "Large aggregate purchase commitment",
+      "clause_id": "1.01.block.3",
+      "severity": "medium",
+      "category": "risky_term",
+      "notes": "$50M ceiling is material relative to issuer size"
+    },
+    {
+      "issue": "No governing law or jurisdiction specified",
+      "severity": "medium",
+      "category": "missing_protection",
+      "notes": "Agreement does not specify which state law governs or which courts have jurisdiction"
+    },
+    {
+      "issue": "No dispute resolution mechanism",
+      "severity": "medium",
+      "category": "missing_protection",
+      "notes": "No arbitration clause or litigation venue specified"
+    },
+    {
+      "issue": "Company cannot terminate for convenience without triggering notice period",
+      "clause_id": "1.01.block.3",
+      "severity": "high",
+      "category": "missing_protection",
+      "notes": "Termination is heavily weighted toward the purchaser"
+    }
+  ]
+}

@@ -15,16 +15,19 @@ import { model } from './layer4/llm.js';
 function parseArgs(argv: string[]): {
   clausesPath: string;
   outPath: string;
-  agreementIdx: number;
+  agreementIdx: number | 'largest';
 } {
   let clausesPath: string | undefined;
   let outPath: string | undefined;
-  let agreementIdx = 0;
+  let agreementIdx: number | 'largest' = 'largest';
   for (const a of argv) {
     if (a.startsWith('--clauses=')) clausesPath = a.slice('--clauses='.length);
     else if (a.startsWith('--out=')) outPath = a.slice('--out='.length);
-    else if (a.startsWith('--agreement='))
-      agreementIdx = parseInt(a.slice('--agreement='.length), 10) || 0;
+    else if (a.startsWith('--agreement=')) {
+      const v = a.slice('--agreement='.length);
+      agreementIdx = parseInt(v, 10);
+      if (isNaN(agreementIdx as number)) agreementIdx = 'largest';
+    }
   }
   if (!clausesPath || !outPath) {
     console.error(`
@@ -33,7 +36,7 @@ Usage:
 
   --clauses     Path to Layer 2 understanding.json (ClauseBlock[])
   --out         Where to write the issues report JSON
-  --agreement   Index of agreement to analyze (default: 0)
+  --agreement   Index of agreement to analyze (default: largest by clause count)
 `);
     process.exit(1);
   }
@@ -60,10 +63,22 @@ if (agreements.length === 0) {
   console.error('layer4: no agreements found');
   process.exit(1);
 }
-const agreement = agreements[agreementIdx];
+
+// Print available agreements so users can see what's there
+process.stderr.write('[layer4] available agreements:\n');
+for (let i = 0; i < agreements.length; i++) {
+  const a = agreements[i]!;
+  process.stderr.write(`  [${i}] ${a.agreement_id}  ${a.clause_ids.length} clause(s)  ${a.counterparty_entity_ids.join(', ') || '(no counterparty)'}\n`);
+}
+
+// Default: pick the agreement with the most clauses (most content to analyze)
+const agreement = agreementIdx === 'largest'
+  ? agreements.reduce((best, a) => a.clause_ids.length > best.clause_ids.length ? a : best)
+  : agreements[agreementIdx as number];
+
 if (!agreement) {
   console.error(
-    `layer4: no agreement at index ${agreementIdx} (found ${agreements.length}: ${agreements.map((a) => a.agreement_id).join(', ')})`,
+    `layer4: no agreement at index ${agreementIdx} (found ${agreements.length})`,
   );
   process.exit(1);
 }
